@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PTE WFD 받아쓰기 채점기</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  color: #333;
+}
+.container {
+  max-width: 880px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  padding: 32px;
+}
+h1 { margin: 0 0 6px; color: #4a3b8c; font-size: 24px; }
+.subtitle { color: #888; font-size: 13px; margin-bottom: 22px; }
+.subtitle a { color: #667eea; }
+
+.yt-btn {
+  display: inline-block;
+  padding: 10px 18px;
+  background: #ff0000;
+  color: #fff;
+  font-size: 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+.yt-btn:hover { background: #cc0000; }
+
+.label {
+  font-weight: 700;
+  color: #4a3b8c;
+  font-size: 13px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 17px;
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.5;
+}
+textarea:focus { outline: none; border-color: #667eea; }
+
+.hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: 6px;
+}
+
+.action-row {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+button {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.btn-primary { background: #667eea; color: #fff; }
+.btn-primary:hover { background: #5568d3; }
+.btn-warning { background: #f59e0b; color: #fff; }
+.btn-warning:hover { background: #d97706; }
+.btn-secondary { background: #fff; color: #667eea; border: 2px solid #667eea; }
+.btn-secondary:hover { background: #eef0ff; }
+
+.result {
+  padding: 20px;
+  background: #f7f8fc;
+  border-radius: 12px;
+  display: none;
+  margin-top: 14px;
+}
+.result.show { display: block; }
+
+.matched-info {
+  background: #e0e7ff;
+  color: #4338ca;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.result-title { font-weight: 700; color: #4a3b8c; font-size: 16px; }
+.score {
+  display: inline-block;
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 17px;
+}
+.score.high { background: #d1fae5; color: #065f46; }
+.score.mid { background: #fef3c7; color: #92400e; }
+.score.low { background: #fee2e2; color: #991b1b; }
+
+.diff-label {
+  font-size: 12px;
+  color: #4a3b8c;
+  font-weight: 700;
+  margin: 10px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.diff-line {
+  font-size: 17px;
+  line-height: 1.9;
+  padding: 14px;
+  background: #fff;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  word-spacing: 2px;
+}
+.word-correct { background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 4px; margin: 0 2px; }
+.word-wrong { background: #ef4444; color: #fff; padding: 2px 6px; border-radius: 4px; margin: 0 2px; font-weight: 700; }
+.word-missing { background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; margin: 0 2px; border: 1px dashed #d97706; }
+
+.stats-line {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #555;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.answer-reveal {
+  background: #fff;
+  border-left: 4px solid #f59e0b;
+  padding: 14px 16px;
+  border-radius: 6px;
+  margin-top: 16px;
+  display: none;
+}
+.answer-reveal.show { display: block; }
+.answer-reveal .ar-label {
+  font-size: 12px;
+  color: #92400e;
+  font-weight: 700;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.answer-en {
+  font-size: 17px;
+  line-height: 1.5;
+  color: #333;
+  margin-bottom: 8px;
+}
+.answer-ko {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #6b7280;
+  font-style: italic;
+  padding-top: 8px;
+  border-top: 1px solid #fef3c7;
+}
+
+.legend {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  margin-top: 14px;
+  color: #666;
+  flex-wrap: wrap;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-color { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
+
+.no-match {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>PTE WFD 받아쓰기 채점기</h1>
+  <div class="subtitle">
+    <a href="https://gopte.co/wfd/129" target="_blank">GoPTE Week 19 (5/7~5/13)</a>의 250문장 내장 ·
+    <a href="https://www.youtube.com/watch?v=VUsBUU48nWk" target="_blank">YouTube 영상</a>에서 듣고 타이핑하면 자동으로 문제를 찾아 채점합니다
+  </div>
+
+  <a class="yt-btn" href="https://www.youtube.com/watch?v=VUsBUU48nWk" target="_blank">▶ YouTube 영상 열기 (새 창)</a>
+
+  <div class="label">들으신 문장을 타이핑하세요</div>
+  <textarea id="user-input" placeholder="여기에 타이핑 후 Enter 키 (줄바꿈은 Shift+Enter)" autofocus></textarea>
+  <div class="hint">⌨️ Enter: 채점하기 · Shift+Enter: 줄바꿈</div>
+
+  <div class="action-row">
+    <button class="btn-primary" id="btn-check">✔ 채점하기</button>
+    <button class="btn-warning" id="btn-answer">👁 정답 확인</button>
+    <button class="btn-secondary" id="btn-clear">지우기</button>
+  </div>
+
+  <div class="result" id="result"></div>
+  <div class="answer-reveal" id="answer-reveal"></div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-color" style="background:#d1fae5"></span>맞은 단어</div>
+    <div class="legend-item"><span class="legend-color" style="background:#ef4444"></span>틀린 단어</div>
+    <div class="legend-item"><span class="legend-color" style="background:#fef3c7;border:1px dashed #d97706"></span>누락된 단어</div>
+  </div>
+</div>
+
+<script>
+var SENTENCES = [["The celebrated theory is still the source of great controversy.", "이 유명한 이론은 여전히 큰 논란의 대상이 되고 있습니다."], ["A good architectural structure should be useful, durable and beautiful.", "좋은 건축 구조는 유용하고 내구성이 뛰어나며 아름다워야 합니다."], ["A group meeting will be held tomorrow in the library conference room.", "내일 도서관 회의실에서 그룹 회의가 열립니다."], ["Educational level is found to be related to social and economic background.", "교육 수준은 사회적, 경제적 배경과 관련이 있는 것으로 나타났습니다."], ["We can all meet at my office after the lecture.", "강의가 끝난 후 우리 사무실에서 모두 만날 수 있어요."], ["Tutorials are scheduled in the final week of the term.", "튜토리얼은 학기 마지막 주에 예정되어 있습니다."], ["You can make an appointment to meet the librarian.", "사서 선생님을 만나기 위해 예약을 할 수 있습니다."], ["All dissertations must be accompanied by a submission form.", "모든 논문에는 제출 양식이 첨부되어야 합니다."], ["All of the assignments must be submitted in person to the faculty office.", "모든 과제는 교직원 사무실에 직접 제출해야 합니다."], ["Economic development needs to be supported by the government.", "경제 발전은 정부의 지원이 필요합니다."], ["The toughest part of postgraduate education is funding.", "대학원 교육에서 가장 어려운 부분은 자금 조달입니다."], ["Our view is that educational reforms have been inadequately implemented.", "우리의 견해는 교육 개혁이 부적절하게 시행되었다는 것입니다."], ["An introduction is an essential element of presentation.", "소개는 프레젠테이션의 필수 요소입니다."], ["The assignments should be submitted to the department office before the deadlines.", "과제는 마감일 전에 부서 사무실에 제출해야 합니다."], ["Before attending classes, you must register online or by post.", "수업에 참석하기 전에 온라인 또는 우편으로 등록해야 합니다."], ["Certain scientific principles must be learned verbally or by logical deduction.", "특정 과학 원리는 구두로 또는 논리적 추론을 통해 학습해야 합니다."], ["Consumer confidence has a direct influence on sales.", "소비자 신뢰는 매출에 직접적인 영향을 미칩니다."], ["Daily practice can build confidence and improve skills.", "매일 연습하면 자신감을 키우고 기술을 향상시킬 수 있습니다."], ["The economic status of the early Roman Republic will be examined.", "초기 로마 공화국의 경제 상황을 살펴볼 것입니다."], ["Human beings compete with other living things for resources and space.", "인간은 자원과 공간을 놓고 다른 생명체와 경쟁합니다."], ["Good research delivers practical benefits for real people.", "좋은 연구는 실제 사람들에게 실질적인 혜택을 제공합니다."], ["He landed a job in a very prestigious law firm.", "그는 매우 명망 있는 로펌에 취직했습니다."], ["The lecture is about the reasons for the financial crisis.", "강의는 금융 위기의 원인에 관한 것입니다."], ["I thought it was through the small meeting room.", "작은 회의실을 통해서인 줄 알았습니다."], ["If finance is a cause of concern, scholarships may be available.", "재정적인 문제가 우려되는 경우 장학금을 받을 수 있습니다."], ["If you need additional help, visit the student resource center.", "추가 도움이 필요하면 학생 리소스 센터를 방문하세요."], ["Important details from the argument are missing in the summary.", "주장의 중요한 세부 사항이 요약에 누락되어 있습니다."], ["It may not be possible to solve the problem easily.", "문제를 쉽게 해결하지 못할 수도 있습니다."], ["Library reference desks hold a lot of materials on academic history.", "도서관 자료실에는 학술 역사에 관한 많은 자료가 있습니다."], ["Listening is the key skill needed to succeed in this course.", "경청은 이 과정에서 성공하는 데 필요한 핵심 기술입니다."], ["Medical researchers have focused on causes of diseases and treatments.", "의학 연구자들은 질병의 원인과 치료법에 집중해 왔습니다."], ["Organizational failure is considered from various perspectives in academic literature.", "조직의 실패는 학술 문헌에서 다양한 관점에서 고려됩니다."], ["Plants are the living things that can grow on land or in water.", "식물은 육지나 물에서 자랄 수 있는 생명체입니다."], ["Please make sure you have correctly cited all the necessary materials.", "필요한 모든 자료를 올바르게 인용했는지 확인하세요."], ["Public perception about biotechnology is crucial for developing scientific consensus.", "생명공학에 대한 대중의 인식은 과학적 공감대를 형성하는 데 매우 중요합니다."], ["Remember, the prestigious election of stewardship has strict eligibility criteria.", "기억하세요, 권위 있는 지도자 선출은 엄격한 자격 기준이 있습니다."], ["Resources and materials are on hold at the library reference desk.", "리소스와 자료는 도서관 참고 데스크에 보관되어 있습니다."], ["Many departments have their own special book collections.", "많은 부서에서 자체적으로 특별한 도서 컬렉션을 보유하고 있습니다."], ["Some economists argue that the entire financial system is fatally flawed.", "일부 경제학자들은 금융 시스템 전체에 치명적인 결함이 있다고 주장합니다."], ["Students have the options to live in college residences or apartments.", "학생들은 대학 기숙사 또는 아파트에서 거주할 수 있습니다."], ["Students who are successful have good strategies for learning.", "성공한 학생은 좋은 학습 전략을 가지고 있습니다."], ["The application processes may take longer than expected.", "신청 절차가 예상보다 오래 걸릴 수 있습니다."], ["The archeologists were astonished by the previously overlooked foundations.", "고고학자들은 이전에는 간과했던 기초를 발견하고 놀라움을 금치 못했습니다."], ["The cafeteria features soup, salads, sandwiches, chicken and fish.", "카페테리아에서는 수프, 샐러드, 샌드위치, 치킨, 생선 요리를 맛볼 수 있습니다."], ["The chemistry building is located near the entrance to the campus.", "화학 건물은 캠퍼스 입구 근처에 있습니다."], ["Rising inflation may indicate an increase in the demand for consumer products.", "인플레이션 상승은 소비재에 대한 수요 증가를 나타낼 수 있습니다."], ["The faculty staff are very approachable, friendly and extremely helpful.", "교수진은 매우 친근하고 친절하며 매우 도움이 됩니다."], ["The history of the university is a long and interesting one.", "대학의 역사는 길고 흥미롭습니다."], ["The island is located at the south end of the bay.", "이 섬은 만의 남쪽 끝에 위치해 있습니다."], ["The massive accumulation of data was converted into a communicable argument.", "방대한 데이터의 축적은 소통 가능한 논쟁으로 전환되었습니다."], ["The most popular courses still have a few places left.", "가장 인기 있는 코스는 아직 자리가 몇 개 남아있습니다."], ["The qualification will be assessed by using a criterion-referenced approach.", "자격은 기준 참조 방식을 사용하여 평가됩니다."], ["The results of the study underscored the importance of early detection.", "연구 결과는 조기 발견의 중요성을 강조했습니다."], ["Safety glasses should be worn while doing experiments in the lab.", "실험실에서 실험을 할 때는 보안경을 착용해야 합니다."], ["There are some doubts about whether these events actually occurred.", "이러한 이벤트가 실제로 발생했는지에 대한 의구심이 있습니다."], ["There is a clear need for further research in this field.", "이 분야에 대한 추가 연구가 필요한 것은 분명합니다."], ["There is clearly a need for further research in this field.", "이 분야에 대한 추가 연구가 필요한 것은 분명합니다."], ["This class will look at the structure of an essay.", "이 수업에서는 에세이의 구조를 살펴봅니다."], ["Water filters on campus will discourage the unnecessary use of plastic bottles.", "캠퍼스에 정수 필터를 설치하면 불필요한 플라스틱 병 사용을 줄일 수 있습니다."], ["We have not yet achieved equality in our society.", "우리 사회는 아직 평등을 이루지 못했습니다."], ["We study science to understand and appreciate the world around us.", "우리는 주변 세계를 이해하고 감사하기 위해 과학을 공부합니다."], ["Parents' talk to children tends to be simplified.", "부모가 자녀와 대화하는 방식은 단순화되는 경향이 있습니다."], ["You will acquire many skills during the academic studies.", "학업을 진행하는 동안 많은 기술을 습득하게 됩니다."], ["Speak to your tutor if you need further assistance.", "추가 도움이 필요하면 튜터에게 문의하세요."], ["Education and training provide important skills for the labor force.", "교육과 훈련은 노동력에게 중요한 기술을 제공합니다."], ["There have been many changes recently in the mathematics department.", "최근 수학과에 많은 변화가 있었습니다."], ["Those who are considering a career in marketing should attend the talk.", "마케팅 분야로 진로를 고려하고 있다면 이 강연에 꼭 참석하세요."], ["The university has invested in new technologies designed to support learning.", "대학은 학습을 지원하기 위해 고안된 새로운 기술에 투자했습니다."], ["A good academic paper should present a clear argument.", "좋은 학술 논문은 명확한 논거를 제시해야 합니다."], ["A good research assistant is not afraid to ask questions.", "훌륭한 연구 조교는 질문을 두려워하지 않습니다."], ["Collaboration between departments is a feature of successful companies.", "부서 간 협업은 성공적인 기업의 특징입니다."], ["Enrolling in a double major may increase your career options.", "복수 전공을 등록하면 커리어 선택의 폭이 넓어질 수 있습니다."], ["Geography is generally divided into two main branches, human and physical.", "지리학은 일반적으로 인적 지리와 물리적 지리의 두 가지 주요 분야로 나뉩니다."], ["In this language course, we focus on both fluency and accuracy.", "이 언어 과정에서는 유창함과 정확성 모두에 중점을 둡니다."], ["This course provides the opportunity to get valuable industry experience.", "이 과정은 귀중한 업계 경험을 쌓을 수 있는 기회를 제공합니다."], ["Read the safety instructions before using any equipment in the workshop.", "워크샵에서 장비를 사용하기 전에 안전 지침을 읽어보세요."], ["Essays and assignments are spread out across the academic year.", "에세이와 과제는 학년 전체에 걸쳐 분산되어 있습니다."], ["Continuing students will be sent the necessary application forms.", "계속 수강하는 학생에게는 필요한 신청서가 발송됩니다."], ["Calculators may not be used during the examination.", "시험 중에는 계산기를 사용할 수 없습니다."], ["The elective course introduces engineering students to construction practices and concepts.", "이 선택 과목은 공학도에게 건설 실무와 개념을 소개합니다."], ["Our new medical students must attend the talk about optional courses.", "신입 의대생은 선택 과목에 대한 강연에 반드시 참석해야 합니다."], ["A professor took one year off to work on her book.", "한 교수는 책 작업을 위해 1년간 휴직했습니다."], ["This problem is complex and difficult to explain.", "이 문제는 복잡하고 설명하기 어렵습니다."], ["Scientists were unsure when the early men first left Africa.", "과학자들은 초기 인류가 언제 아프리카를 처음 떠났는지 확신하지 못했습니다."], ["The printers automatically print on both sides of each page.", "프린터는 각 페이지의 양면을 자동으로 인쇄합니다."], ["There is a widely believed perception that engineering is for boys.", "공학은 남자아이들이나 하는 것이라는 인식이 널리 퍼져 있습니다."], ["Time and distance are used to calculate speed.", "속도 계산에는 시간과 거리가 사용됩니다."], ["Distance learning allows you to develop a career around your commitments.", "원격 학습을 통해 약속을 중심으로 커리어를 개발할 수 있습니다."], ["Every student has regular meetings with his or her personal tutor.", "모든 학생은 개인 튜터와 정기적인 미팅을 갖습니다."], ["Castles were designed to intimidate both local people and enemies.", "성은 지역 주민과 적 모두를 위협할 수 있도록 설계되었습니다."], ["The opening hours of the library are reduced during summer.", "여름철에는 도서관 운영 시간이 단축됩니다."], ["A laptop computer has been found in the biology lab.", "생물학 실험실에서 노트북 컴퓨터가 발견되었습니다."], ["His appointment as the Minister of Culture was seen as a demotion.", "그의 문화부 장관 임명은 강등으로 여겨졌습니다."], ["Measures must be taken to prevent the unemployment rate from increasing.", "실업률 증가를 막기 위한 조치를 취해야 합니다."], ["The coffee machine located on the third floor is not working today.", "3층에 위치한 커피 머신이 오늘 작동하지 않습니다."], ["Request for late applications will not be accepted under any circumstances.", "늦은 신청 요청은 어떠한 경우에도 허용되지 않습니다."], ["Salt is produced from seawater or extracted from the ground.", "소금은 바닷물에서 생산되거나 땅에서 추출됩니다."], ["The news will not be received until the following week.", "이 소식은 다음 주까지 수신되지 않습니다."], ["You do not need specialist knowledge to enjoy this book.", "전문 지식이 없어도 이 책을 즐길 수 있습니다."], ["The area has a variety of underwater habitats and species.", "이 지역에는 다양한 수중 서식지와 종이 있습니다."], ["Your ideas are discussed and debated in seminars and tutorials.", "여러분의 아이디어는 세미나와 튜토리얼에서 논의되고 토론됩니다."], ["Our study program equips students with essential skills for university.", "저희의 학습 프로그램은 학생들에게 대학에 필요한 필수 기술을 제공합니다."], ["Many food crops require large amounts of water and fertilizer.", "많은 식량 작물에는 많은 양의 물과 비료가 필요합니다."], ["Classical mechanics is sometimes considered as a branch of applied mathematics.", "고전 역학은 때때로 응용 수학의 한 분야로 간주되기도 합니다."], ["Students should leave their bags on the table by the door.", "학생들은 문 옆 테이블 위에 가방을 놓아두어야 합니다."], ["Sea levels are expected to rise during the next century.", "해수면은 다음 세기 동안 상승할 것으로 예상됩니다."], ["Please close the door behind you when you leave the room.", "방을 나갈 때는 문을 닫아주세요."], ["The department works closely with business communities.", "이 부서는 비즈니스 커뮤니티와 긴밀히 협력합니다."], ["There is an accounting assignment for finance students.", "재무학과 학생을 위한 회계 과제가 있습니다."], ["Relying on natural ability will not get you far in science.", "타고난 능력에 의지한다고 해서 과학 분야에서 멀리 나아갈 수는 없습니다."], ["We should never underestimate the power of creative design.", "우리는 창의적인 디자인의 힘을 결코 과소평가해서는 안 됩니다."], ["Linguistics is the scientific study and analysis of language.", "언어학은 언어를 과학적으로 연구하고 분석하는 학문입니다."], ["Please return the reference book to the correct position on the library shelf.", "참고 도서를 도서관 서가의 올바른 위치에 반납해 주세요."], ["Marine environments have been destroyed through pollution and unsustainable development.", "해양 환경은 오염과 지속 불가능한 개발로 인해 파괴되고 있습니다."], ["Designers need to keep up with the social trends.", "디자이너는 사회적 트렌드를 따라가야 합니다."], ["People have been dependent on using phones in their everyday lives.", "사람들은 일상 생활에서 휴대폰 사용에 의존해 왔습니다."], ["A new collection of articles has just been published.", "새로운 기사 모음집이 막 출간되었습니다."], ["A visit to the designed museum is of great value.", "디자인 박물관을 방문하는 것은 큰 가치가 있습니다."], ["The university provides excellent leisure facilities for students and staff.", "대학은 학생과 교직원을 위한 훌륭한 여가 시설을 제공합니다."], ["Auditions for the university choir will be held next week.", "대학 합창단 오디션은 다음 주에 열립니다."], ["A good abstract highlights the key points of your paper.", "좋은 초록은 논문의 핵심 사항을 강조합니다."], ["The commissioner will apportion the funds among all the authorities.", "위원장이 모든 기관에 자금을 배분합니다."], ["Please note that the seminar has now been canceled.", "현재 세미나가 취소되었음을 알려드립니다."], ["Three separate research resources are not enough for this assessment.", "이 평가에는 세 가지 개별 연구 리소스만으로는 충분하지 않습니다."], ["Please return your reference books to the library shelves.", "참고 도서는 도서관 서가에 반납해 주세요."], ["New media journalism is an exciting area of study.", "뉴미디어 저널리즘은 흥미로운 연구 분야입니다."], ["Rising sea temperatures are a sign of climate change.", "해수 온도 상승은 기후 변화의 신호입니다."], ["Many universities are continuously expanding the postgraduate education online learning resources.", "많은 대학에서 대학원 교육 온라인 학습 리소스를 지속적으로 확장하고 있습니다."], ["Before preparing food, please make sure to wash your hands.", "음식을 준비하기 전에는 반드시 손을 씻어주세요."], ["The economic predictions turned out to be incorrect.", "경제 예측은 틀린 것으로 판명되었습니다."], ["Students should take the training course to use the gym.", "학생들은 체육관을 이용하려면 교육 과정을 수강해야 합니다."], ["The momentum is defined as the combination of mass and velocity.", "운동량은 질량과 속도의 조합으로 정의됩니다."], ["More research is needed before any definitive conclusion can be drawn.", "확실한 결론을 내리기 위해서는 더 많은 연구가 필요합니다."], ["You can get your coffee and tea in the lounge.", "라운지에서 커피와 차를 즐기실 수 있습니다."], ["In my opinion, the car should be repaired.", "제 생각에는 차를 수리해야 합니다."], ["The north campus car park could be closed on Sunday.", "북쪽 캠퍼스 주차장은 일요일에 폐쇄될 수 있습니다."], ["Participating in the class is the center of the course.", "수업에 참여하는 것이 이 과정의 핵심입니다."], ["The study center in the library has all the latest technologies.", "도서관의 학습 센터에는 모든 최신 기술이 갖추어져 있습니다."], ["At university students can make friends for life.", "대학생은 평생 친구를 사귈 수 있습니다."], ["Much of this research is carried out in the laboratory.", "이 연구의 대부분은 실험실에서 수행됩니다."], ["Technology is changing the way that media is used and studied.", "기술은 미디어를 사용하고 연구하는 방식을 바꾸고 있습니다."], ["You will be tested by continuous assessments and examinations.", "지속적인 평가와 검사를 통해 테스트를 받게 됩니다."], ["The college operates a system of continuous assessments.", "본교는 지속적인 평가 시스템을 운영하고 있습니다."], ["Scientists have founded all parts of society today.", "과학자들은 오늘날 사회의 모든 분야를 창시했습니다."], ["Novelists write about the best things that they know about.", "소설가들은 자신이 알고 있는 최고의 것들에 대해 글을 씁니다."], ["The lecture today will cover all the main reasons for global warming.", "오늘 강연에서는 지구 온난화의 주요 원인을 모두 다룰 예정입니다."], ["The rising temperature is changing the wildlife population.", "기온 상승으로 인해 야생 동물 개체수가 변화하고 있습니다."], ["The director of the gallery was grateful for the anonymous donation.", "갤러리 관장은 익명으로 기부해 주신 것에 감사했습니다."], ["You should have awareness of how the business operates globally.", "비즈니스가 전 세계적으로 어떻게 운영되는지 알고 있어야 합니다."], ["Art is an expression of creative skills and imagination.", "예술은 창의력과 상상력의 표현입니다."], ["We have sophisticated ways of studying the brain in action.", "우리는 두뇌의 활동을 연구하는 정교한 방법을 가지고 있습니다."], ["The article considers the leisure habits of teenagers in rural areas.", "이 글은 농촌 지역 청소년들의 여가 습관을 고찰합니다."], ["We learned through observations and the analysis of human behaviors.", "우리는 관찰과 인간 행동 분석을 통해 배웠습니다."], ["The subject was complex and difficult to explain.", "이 주제는 복잡하고 설명하기 어려웠습니다."], ["Our aim is to reduce the risks that people take.", "우리의 목표는 사람들이 감수하는 위험을 줄이는 것입니다."], ["Please confirm that you have received the textbook.", "교재를 받았는지 확인해 주세요."], ["All answers must be thoroughly researched and supported by relevant theories.", "모든 답안은 관련 이론을 철저히 조사하고 이를 뒷받침해야 합니다."], ["Accountancy students have to hand in their dissertations this week.", "회계학과 학생들은 이번 주에 논문을 제출해야 합니다."], ["His analysis study appears to be based on the false premise.", "그의 분석 연구는 잘못된 전제를 바탕으로 한 것으로 보입니다."], ["Visual aid can be really helpful when you are revising.", "수정 작업을 할 때 시각적 자료가 정말 도움이 될 수 있습니다."], ["We encourage students to complete their applications before the deadline.", "학생들이 마감일 전에 지원서를 완료할 것을 권장합니다."], ["Graduates from this course typically pursue careers in financial sector.", "이 과정의 졸업생은 일반적으로 금융 부문에서 경력을 쌓습니다."], ["It is a debate about the value of knowledge.", "지식의 가치에 대한 논쟁입니다."], ["Strangely, people are simultaneously impressed by and skeptical about statistics.", "이상하게도 사람들은 통계에 대해 깊은 인상을 받으면서도 동시에 회의적인 반응을 보입니다."], ["The collapse of the housing market has caused recessions.", "주택시장의 붕괴는 경기침체를 가져왔다."], ["Calculators allow us to add numbers without making mistakes.", "계산기를 사용하면 실수 없이 숫자를 더할 수 있습니다."], ["Most of the lectures begin promptly, so do not be late.", "대부분의 강의는 정시에 시작되므로 지각하지 마세요."], ["The student union hosts a variety of social events.", "학생회에서는 다양한 사교 행사를 주최합니다."], ["Social psychology is concerned with the understanding of human behaviors.", "사회 심리학은 인간 행동에 대한 이해와 관련이 있습니다."], ["Gravity is the force that attracts two bodies toward one another.", "중력은 두 물체를 서로 끌어당기는 힘입니다."], ["The reception staff can give advice on renting private accommodation.", "리셉션 직원은 개인 숙소 임대에 관한 조언을 제공해 드립니다."], ["Artists need to make their works both original and accessible.", "예술가는 자신의 작품을 독창적이고 쉽게 접근할 수 있도록 만들어야 합니다."], ["The archeologist's new discoveries stand out in the previously overlooked foundations.", "고고학자의 새로운 발견은 이전에 간과되었던 유적에서 두드러집니다."], ["Please return the textbooks to the correct bookshelves in the library.", "교과서를 도서관의 올바른 책꽂이에 반납해 주세요."], ["The contract will be signed by the owner of the company.", "계약은 회사 소유주가 서명합니다."], ["The glittering of the lake surface camouflages the fish.", "호수 표면의 반짝이는 빛이 물고기를 위장합니다."], ["Having enough sleep has many positive benefits.", "충분한 수면은 많은 긍정적인 이점을 가져다줍니다."], ["The lecture will cover the reason for climate change.", "이번 강연에서는 기후 변화의 원인에 대해 다룰 예정입니다."], ["Assessment procedure has been changed slightly since the last year.", "작년부터 평가 절차가 약간 변경되었습니다."], ["The article illustrates the intricate relationship of culture and language.", "이 글은 문화와 언어의 복잡한 관계를 잘 보여줍니다."], ["The tutor has canceled the lecture for geography students.", "강사가 지리학 학생을 위한 강의를 취소했습니다."], ["All accounting students must submit their dissertations before the end of the week.", "모든 회계학 학생은 이번 주가 끝나기 전에 논문을 제출해야 합니다."], ["The next lecture will take place at a different location.", "다음 강의는 다른 장소에서 열립니다."], ["We should always use recycled plastic and glass bottles.", "항상 재활용 플라스틱과 유리병을 사용해야 합니다."], ["Plastic pollution is very dangerous for ocean lives.", "플라스틱 오염은 해양 생물에게 매우 위험합니다."], ["The content is to define the combination of math and philosophy.", "내용은 수학과 철학의 결합을 정의하는 것입니다."], ["Students often conduct research to enhance their knowledge.", "학생들은 종종 지식을 향상시키기 위해 연구를 수행합니다."], ["Farming is affected by changes in seasonal patterns.", "농사는 계절 패턴의 변화에 영향을 받습니다."], ["The rise in sea level indicates climate change.", "해수면 상승은 기후 변화를 나타냅니다."], ["The university library cafe is on the third floor.", "대학 도서관 카페는 3층에 있습니다."], ["Some students were absent due to the train delay.", "일부 학생들은 열차 지연으로 인해 결석했습니다."], ["The class is canceled because the professor is sick.", "교수님이 아파서 수업이 취소되었습니다."], ["We were talking about ways of committing crimes.", "우리는 범죄를 저지르는 방법에 대해 이야기하고 있었습니다."], ["Maths uses numbers and shapes to solve problems.", "수학은 숫자와 도형을 사용하여 문제를 해결합니다."], ["The employment rate has steadily increased over the last year.", "지난 한 해 동안 고용률은 꾸준히 증가했습니다."], ["The professor said biology is not the only subject on the exam.", "교수는 생물학만이 시험의 유일한 과목이 아니라고 말했습니다."], ["Participants recorded their sleep hours in the journals.", "참가자들은 자신의 수면 시간을 일지에 기록했습니다."], ["Effective communication is the key to becoming a successful manager.", "효과적인 커뮤니케이션은 성공적인 관리자가 되기 위한 핵심 요소입니다."], ["Students need to register to gain access to library printers.", "학생은 도서관 프린터를 사용하려면 등록해야 합니다."], ["There will be a quiz class next week.", "다음 주에 퀴즈 수업이 있을 예정입니다."], ["Please confirm your essay topic one week before the deadline.", "마감일 1주일 전에 에세이 주제를 확정해 주세요."], ["The exam will not be posted until further notice.", "시험은 추후 공지가 있을 때까지 게시되지 않습니다."], ["The university auditorium is around the corner.", "대학 강당이 코앞에 있습니다."], ["The professor discussed the article yesterday in this class.", "교수님이 어제 이 수업에서 이 기사에 대해 논의했습니다."], ["Affordable housing is an important issue for all members of society.", "저렴한 주택은 모든 사회 구성원에게 중요한 문제입니다."], ["All of your assignments are due by tomorrow.", "모든 과제는 내일까지 제출해야 합니다."], ["Most scientists believe that climate change threatens the lives on earth.", "대부분의 과학자들은 기후 변화가 지구의 생명을 위협한다고 믿습니다."], ["The academic strength of the early Roman Republic will be examined.", "초기 로마 공화국의 학문적 강점을 살펴볼 것입니다."], ["Our professor is hosting the business development conference.", "우리 교수님이 비즈니스 개발 컨퍼런스를 주최하고 계십니다."], ["Food that contains antibiotics provides little or no nutritional value.", "항생제가 함유된 식품은 영양가가 거의 없거나 전혀 없습니다."], ["The railway makes long-distance travel possible for everyone.", "철도는 누구에게나 장거리 여행을 가능하게 해줍니다."], ["Traffic is the main cause of air pollution in many cities.", "교통 체증은 많은 도시에서 대기 오염의 주요 원인입니다."], ["Students are encouraged to monitor their studies by themselves.", "학생들은 스스로 학습 상황을 점검하도록 권장됩니다."], ["We have a lecture in the morning on Thursday.", "목요일 오전에 강의가 있습니다."], ["The lecture tomorrow will discuss the educational policy of the United States.", "내일 강의에서는 미국의 교육 정책에 대해 논의할 예정입니다."], ["Make sure you choose a course that provides great career opportunities.", "훌륭한 커리어 기회를 제공하는 과정을 선택해야 합니다."], ["Social media is criticized for causing internet addiction.", "소셜 미디어는 인터넷 중독을 유발한다는 비판을 받고 있습니다."], ["Sugar is a compound including carbon, oxygen, and hydrogen atoms.", "설탕은 탄소, 산소, 수소 원자로 이루어진 화합물이다."], ["The digital camera has some advantages over traditional film.", "디지털 카메라는 기존 필름에 비해 몇 가지 장점이 있습니다."], ["Air pollution is a serious problem all over the world.", "대기 오염은 전 세계적으로 심각한 문제입니다."], ["He wrote poetry and plays as well as scientific papers.", "그는 시와 희곡뿐만 아니라 과학 논문도 썼습니다."], ["Students are encouraged to think carefully about their accommodation needs.", "학생들은 숙박 시설에 대해 신중하게 생각해 보시기 바랍니다."], ["Banks charge interest on the money they lend to customers.", "은행은 고객에게 빌려주는 돈에 대해 이자를 부과합니다."], ["The other book isn't thorough, but it's more insightful.", "다른 책은 철저하지는 않지만 더 통찰력이 있습니다."], ["The dance department stages elaborated performances each semester.", "무용학과에서는 매 학기마다 정교한 공연을 선보입니다."], ["While some people regard it as reforming zeal, others regard it as recklessness.", "어떤 사람들은 이를 개혁의 열정으로 여기는 반면, 어떤 사람들은 무모한 행동으로 간주합니다."], ["The student shop sells a range of stationery.", "학생 상점에서는 다양한 문구류를 판매합니다."], ["When the root system of a plant fails, foliage suffers.", "식물의 뿌리 시스템에 문제가 생기면 잎이 손상됩니다."], ["The course includes a combination of pure and applied mathematics.", "이 과정에는 순수 수학과 응용 수학이 결합되어 있습니다."], ["Students must wear protective clothing that is provided in the medical laboratory.", "학생들은 반드시 의료 실험실에서 제공하는 보호복을 착용해야 합니다."], ["You can use your laptops in the lecture.", "강의실에서는 노트북을 사용하실 수 있습니다."], ["The library will be closed for staff training tomorrow morning.", "도서관은 내일 오전 직원 교육을 위해 휴관합니다."], ["Mathematics provides a foundation for understanding and analyzing data.", "수학은 데이터를 이해하고 분석하기 위한 기초를 제공합니다."], ["Football is played throughout all years at the university.", "축구는 대학에서 모든 학년에 걸쳐 진행됩니다."], ["Unemployment rate has fallen to its lowest level in years.", "실업률은 수년 만에 최저 수준으로 떨어졌습니다."], ["Library plays an important role in students' lives.", "도서관은 학생들의 삶에서 중요한 역할을 합니다."], ["Course work gives students the chances to thoroughly explore the subject.", "코스 학습은 학생들에게 주제를 철저히 탐구할 수 있는 기회를 제공합니다."], ["It is quite clear that our facial expressions are different across the world.", "우리의 표정이 전 세계적으로 다르다는 것은 분명합니다."], ["All experimental procedures are outlined in the laboratory manual.", "모든 실험 절차는 실험실 매뉴얼에 설명되어 있습니다."], ["You need to make sure that all your essays are handed in on time.", "모든 에세이를 제시간에 제출해야 합니다."], ["A university degree is required for entry into various professions.", "다양한 직업에 진출하려면 대학 학위가 필요합니다."], ["Most of these students have not considered this issue before.", "이 학생들 대부분은 이 문제에 대해 생각해 본 적이 없습니다."], ["Mutually exclusive events can be described as either complementary or opposite.", "상호 배타적인 이벤트는 상호 보완적이거나 반대되는 것으로 설명할 수 있습니다."], ["Teaching assistants play a vital role in the learning process.", "조교는 학습 과정에서 중요한 역할을 합니다."], ["The closing date of applications for travel scholarships is next Monday.", "여행 장학금 신청 마감일은 다음 주 월요일입니다."], ["Summer school programs allow some students to accelerate their studies.", "일부 학생들은 여름방학 프로그램을 통해 학습 속도를 높일 수 있습니다."], ["Safety is the most important in the biology lab.", "생물학 연구실에서는 안전이 가장 중요합니다."], ["Application forms should be submitted in one week.", "신청서는 1주일 이내에 제출해야 합니다."], ["We were discussing the methods used by criminals to commit crimes.", "우리는 범죄자들이 범죄를 저지르는 데 사용하는 방법에 대해 논의하고 있었습니다."], ["We have been unsuccessful in finding a new manager.", "새 매니저를 찾는 데 실패했습니다."]];
+var lastMatchIdx = -1;
+
+function normalize(t) {
+  return t.toLowerCase().replace(/[^a-z0-9\s']/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function tokenize(t) {
+  var n = normalize(t);
+  if (!n) return [];
+  return n.split(' ').filter(function(x) { return x.length > 0; });
+}
+
+function diffWords(o, u) {
+  var m = o.length, n = u.length;
+  var dp = [];
+  for (var i = 0; i <= m; i++) {
+    dp.push(new Array(n + 1).fill(0));
+  }
+  for (var i = 1; i <= m; i++) {
+    for (var j = 1; j <= n; j++) {
+      if (o[i-1] === u[j-1]) dp[i][j] = dp[i-1][j-1] + 1;
+      else dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+    }
+  }
+  var ops = [];
+  var i2 = m, j2 = n;
+  while (i2 > 0 && j2 > 0) {
+    if (o[i2-1] === u[j2-1]) {
+      ops.unshift({type:'match', w:o[i2-1]});
+      i2--; j2--;
+    } else if (dp[i2-1][j2] >= dp[i2][j2-1]) {
+      ops.unshift({type:'missing', w:o[i2-1]});
+      i2--;
+    } else {
+      ops.unshift({type:'extra', w:u[j2-1]});
+      j2--;
+    }
+  }
+  while (i2 > 0) { ops.unshift({type:'missing', w:o[i2-1]}); i2--; }
+  while (j2 > 0) { ops.unshift({type:'extra', w:u[j2-1]}); j2--; }
+  return { ops: ops, lcs: dp[m][n] };
+}
+
+function findBestMatch(userWords) {
+  var bestIdx = -1;
+  var bestScore = -1;
+  for (var i = 0; i < SENTENCES.length; i++) {
+    var sentWords = tokenize(SENTENCES[i][0]);
+    var r = diffWords(sentWords, userWords);
+    var denom = Math.max(sentWords.length, userWords.length);
+    var score = denom > 0 ? r.lcs / denom : 0;
+    if (score > bestScore) {
+      bestScore = score;
+      bestIdx = i;
+    }
+  }
+  return { idx: bestIdx, score: bestScore };
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function checkAnswer() {
+  var userText = document.getElementById('user-input').value.trim();
+  var resultEl = document.getElementById('result');
+  var answerEl = document.getElementById('answer-reveal');
+  answerEl.classList.remove('show');
+
+  if (!userText) {
+    alert('타이핑한 내용을 입력하세요!');
+    return;
+  }
+
+  var userWords = tokenize(userText);
+  if (userWords.length === 0) {
+    alert('영어 단어를 입력하세요!');
+    return;
+  }
+
+  var match = findBestMatch(userWords);
+  lastMatchIdx = match.idx;
+
+  if (match.score < 0.2) {
+    resultEl.innerHTML = '<div class="no-match">⚠️ 250문장 중 충분히 일치하는 문장을 찾지 못했습니다 (최대 일치율: ' + Math.round(match.score * 100) + '%).<br>다시 들어보고 입력해보세요.</div>';
+    resultEl.classList.add('show');
+    return;
+  }
+
+  var matchedEn = SENTENCES[match.idx][0];
+  var origWords = tokenize(matchedEn);
+  var r = diffWords(origWords, userWords);
+  var accuracy = origWords.length > 0 ? Math.round((r.lcs / origWords.length) * 100) : 0;
+  var sc = accuracy >= 80 ? 'high' : accuracy >= 50 ? 'mid' : 'low';
+
+  var diffHtml = '';
+  for (var k = 0; k < r.ops.length; k++) {
+    var op = r.ops[k];
+    if (op.type === 'match') diffHtml += '<span class="word-correct">' + escapeHtml(op.w) + '</span>';
+    else if (op.type === 'missing') diffHtml += '<span class="word-missing">' + escapeHtml(op.w) + '</span>';
+    else diffHtml += '<span class="word-wrong">' + escapeHtml(op.w) + '</span>';
+  }
+
+  var correctCount = r.ops.filter(function(x) { return x.type === 'match'; }).length;
+  var missingCount = r.ops.filter(function(x) { return x.type === 'missing'; }).length;
+  var extraCount = r.ops.filter(function(x) { return x.type === 'extra'; }).length;
+  var msg = accuracy === 100 ? '🎉 완벽합니다!' : accuracy >= 90 ? '✨ 거의 완벽!' : accuracy >= 70 ? '👍 잘했어요' : accuracy >= 50 ? '💪 조금 더!' : '📚 다시 한 번';
+
+  resultEl.innerHTML =
+    '<div class="matched-info">🔍 매칭된 문제: <strong>#' + (match.idx + 1) + '</strong> (250문장 중) · 일치율 ' + Math.round(match.score * 100) + '%</div>' +
+    '<div class="result-header">' +
+      '<div class="result-title">📊 채점 결과 — ' + msg + '</div>' +
+      '<span class="score ' + sc + '">' + accuracy + '점</span>' +
+    '</div>' +
+    '<div class="diff-label">단어별 비교 (정답 기준)</div>' +
+    '<div class="diff-line">' + diffHtml + '</div>' +
+    '<div class="stats-line">' +
+      '<span>✅ 맞음: <strong>' + correctCount + '</strong>/' + origWords.length + '</span>' +
+      '<span>⚠️ 누락: <strong>' + missingCount + '</strong></span>' +
+      '<span>❌ 틀림(여분/오타): <strong>' + extraCount + '</strong></span>' +
+    '</div>';
+
+  resultEl.classList.add('show');
+}
+
+function showAnswer() {
+  var userText = document.getElementById('user-input').value.trim();
+  var answerEl = document.getElementById('answer-reveal');
+
+  if (lastMatchIdx < 0) {
+    if (!userText) {
+      alert('먼저 들으신 문장의 일부라도 타이핑하세요. 그러면 정답을 자동으로 찾아드립니다.');
+      return;
+    }
+    var userWords = tokenize(userText);
+    if (userWords.length === 0) {
+      alert('영어 단어를 입력하세요!');
+      return;
+    }
+    var match = findBestMatch(userWords);
+    if (match.score < 0.15) {
+      alert('250문장 중 일치하는 문장을 찾을 수 없습니다. 더 많이 적어보세요.');
+      return;
+    }
+    lastMatchIdx = match.idx;
+  }
+
+  var matchedEn = SENTENCES[lastMatchIdx][0];
+  var matchedKo = SENTENCES[lastMatchIdx][1];
+  answerEl.innerHTML =
+    '<div class="ar-label">💡 정답 (#' + (lastMatchIdx + 1) + ')</div>' +
+    '<div class="answer-en">' + escapeHtml(matchedEn) + '</div>' +
+    '<div class="answer-ko">🇰🇷 ' + escapeHtml(matchedKo) + '</div>';
+  answerEl.classList.add('show');
+  answerEl.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function clearAll() {
+  document.getElementById('user-input').value = '';
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('answer-reveal').classList.remove('show');
+  lastMatchIdx = -1;
+  document.getElementById('user-input').focus();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('btn-check').addEventListener('click', checkAnswer);
+  document.getElementById('btn-answer').addEventListener('click', showAnswer);
+  document.getElementById('btn-clear').addEventListener('click', clearAll);
+
+  // Enter triggers 채점, Shift+Enter for newline
+  document.getElementById('user-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      checkAnswer();
+    }
+  });
+});
+</script>
+</body>
+</html>
